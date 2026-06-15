@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react'
 import {
   Copy,
   Upload,
@@ -29,6 +30,7 @@ import { toast } from 'sonner';
 
 export default function ClientDashboard() {
   const router = useRouter();
+  const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<'new-order' | 'my-orders' | 'queue'>('new-order');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [printConfig, setPrintConfig] = useState({
@@ -43,8 +45,8 @@ export default function ClientDashboard() {
     deliveryTime: ''
   });
 
-  const userRole = typeof window !== 'undefined' ? (localStorage.getItem('userRole') || 'student') : 'student';
-  const userEmail = typeof window !== 'undefined' ? (localStorage.getItem('userEmail') || 'usuario@universidad.edu') : 'usuario@universidad.edu';
+  const userRole = session?.user?.role ?? 'Estudiante'
+  const userEmail = session?.user?.email ?? ''
 
   const [myOrders] = useState([
     {
@@ -55,7 +57,7 @@ export default function ClientDashboard() {
       total: 4.50,
       qrCode: 'QR-001',
       date: '2024-05-18',
-      priority: userRole === 'teacher'
+      priority: userRole === 'Docente'
     },
     {
       id: 'ORD-2024-002',
@@ -65,7 +67,7 @@ export default function ClientDashboard() {
       total: 5.00,
       qrCode: 'QR-002',
       date: '2024-05-18',
-      priority: userRole === 'teacher'
+      priority: userRole === 'Docente'
     },
     {
       id: 'ORD-2024-003',
@@ -75,7 +77,7 @@ export default function ClientDashboard() {
       total: 15.00,
       qrCode: 'QR-003',
       date: '2024-05-17',
-      priority: userRole === 'teacher'
+      priority: userRole === 'Docente'
     }
   ]);
 
@@ -117,10 +119,7 @@ export default function ClientDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    toast.success('Sesión cerrada');
-    router.push('/');
+    signOut({ callbackUrl: '/' })
   };
 
   const getStatusBadge = (status: string) => {
@@ -149,7 +148,7 @@ export default function ClientDashboard() {
                 </span>
               </Link>
 
-              {userRole === 'teacher' && (
+              {userRole === 'Docente' && (
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-100 to-yellow-50 border border-yellow-300 rounded-full">
                   <Star className="size-4 text-yellow-600" />
                   <span className="text-sm font-semibold text-yellow-700">Prioridad Docente</span>
@@ -167,7 +166,7 @@ export default function ClientDashboard() {
                 <User className="size-5 text-gray-600" />
                 <div className="text-sm">
                   <p className="font-semibold text-gray-900">{userEmail}</p>
-                  <p className="text-gray-500 text-xs">{userRole === 'teacher' ? 'Docente' : 'Estudiante'}</p>
+                  <p className="text-gray-500 text-xs">{userRole}</p>
                 </div>
               </div>
 
@@ -580,7 +579,7 @@ export default function ClientDashboard() {
                   </div>
                 </div>
 
-                {userRole === 'teacher' && (
+                {userRole === 'Docente' && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                     <div className="flex items-start gap-2">
                       <Star className="size-5 text-yellow-600 mt-0.5" />

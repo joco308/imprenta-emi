@@ -4,7 +4,7 @@
 - **Next.js 15.5.18** (App Router, `src/` directory) + **React 19** + **TypeScript 5.9** SPA.
 - Tailwind CSS v4 via `@tailwindcss/postcss` (PostCSS plugin, no Vite).
 - shadcn/ui primitives in `src/components/ui/` (MIT, see `ATTRIBUTIONS.md`).
-- Other libs in use: `sonner` (toasts), `lucide-react` (icons), `recharts` (admin charts), Radix UI, `class-variance-authority`, `tailwind-merge`, `clsx`, `motion`, `date-fns`, `react-hook-form`, `@supabase/supabase-js`, `@supabase/ssr`, `shadcn` (CLI).
+- Other libs in use: `sonner` (toasts), `lucide-react` (icons), `recharts` (admin charts), Radix UI, `class-variance-authority`, `tailwind-merge`, `clsx`, `motion`, `date-fns`, `react-hook-form`, `bcrypt`, `@supabase/supabase-js`, `@supabase/ssr`, `next-auth` (v5 beta), `shadcn` (CLI).
 
 ## Commands
 - Package manager: **npm** (no longer pnpm). The `pnpm.overrides` block was removed.
@@ -35,6 +35,9 @@
 - Mock data + helpers: `src/lib/mockData.ts` (users, orders, products, statuses, services, `generateQRCode`, `calculateEstimatedTime`, `formatDate`).
 - Styles: `src/app/globals.css` aggregates `../styles/{fonts,tailwind,theme}.css`. Tailwind tokens and dark mode are now defined in `tailwind.css` itself (imports `shadcn/tailwind.css`, defines `@theme inline` and `@custom-variant dark`). The old `theme.css` still exists but its tokens may be shadowed.
 - Supabase lib: `src/lib/{client,server,middleware,utils}.ts`. Client uses `createBrowserClient` (`@supabase/ssr`); server uses `createServerClient` + `cookies()` from `next/headers`; middleware helper uses `createServerClient` + `getClaims()`.
+- Repositories (`src/lib/repositories/`): SOLID, cada tabla tiene su repositorio que implementa `IRepository<T>` (CRUD + queries específicas).
+- API REST (`src/app/api/`): 12 endpoints con Route Handlers (GET/POST/PUT/DELETE) que usan los repositorios. Helper en `src/lib/api-helpers.ts`.
+- `src/lib/repositories/types.ts` — tipos TypeScript para cada tabla del schema.
 
 ## Path alias
 - `@/*` -> `./src/*` (set in `tsconfig.json` `paths`). Use it for cross-folder imports; shadcn `ui/*` components import siblings via relative paths and `./utils`.
@@ -68,8 +71,13 @@
 
 ## Conventions
 - Language: Spanish in all user-facing copy and `mockData.ts` (e.g. `formatDate` uses `es-ES`).
-- Auth was **mocked** (login page accepts any email/password, stores role in `localStorage`). Supabase client files are now set up (`src/lib/client.ts`, `server.ts`, `middleware.ts`) but **not yet wired** into pages — `.env.local` still empty, no real authentication connected.
-- **Supabase env vars required**: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` must be set in `.env.local` for Supabase clients to work.
+- Auth has two paths:
+  - **Mock login**: Any email/password, stores role in `localStorage` (legacy, still works).
+  - **Microsoft Entra ID** (`next-auth` v5 beta): `src/auth.ts` configures the provider. After OAuth, auto-creates users in DB with rol=Estudiante and tipo_autenticacion=Microsoft (looked up from `Sub_dominio` by name — no hardcoded IDs).
+  - New users without a password hash are redirected to `/auth/crear-contrasena` to create one (bcrypt-hashed).
+  - `src/app/providers.tsx` wraps the app with `SessionProvider`.
+  - Required env vars: `AUTH_SECRET`, `AUTH_MICROSOFT_ENTRA_ID_ID`, `AUTH_MICROSOFT_ENTRA_ID_SECRET`.
+- **Supabase env vars**: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are already set in `.env.local`.
 - Toast notifications go through `sonner` via `ToasterWrapper` (mounted in the root layout).
 - shadcn components in `src/components/ui/` are upstream Figma Make output — prefer composing/extending at the call site over editing them. New UI primitives follow the same shadcn patterns (`cn` from `./utils`, `cva` variants, `data-slot` attributes).
 - `src/components/figma/ImageWithFallback.tsx` is a Figma-Make-specific image with built-in error fallback SVG. Client component (uses `useState`).
@@ -87,5 +95,6 @@
 - No tests, no test runner, no CI workflows, no pre-commit hooks, no Prettier config.
 - No `index.html` and no Vite entry (`src/main.tsx` is gone) — Next.js generates the HTML.
 - No MUI, no Emotion, no `react-dnd`, no `react-slick` (removed during the Next.js migration; they were declared but never imported).
-- `DDL.sql` at root defines the intended PostgreSQL schema (Dominio, Usuarios, Impresion, Orden, etc.) but no backend or DB connection is wired yet.
+- `DDL.sql` defines the PostgreSQL schema (Dominio, Usuarios, Impresion, Orden, etc.) already deployed to Supabase.
+- `DML.sql` has seed data for Dominio (9 domains) and Sub_dominio (31 values: roles, auth methods, printer statuses, paper sizes, etc.). Run it after DDL to populate the catalog tables.
 - `src/assets/` directory does not exist yet. If you use `figma:asset/...` imports, create the target file there first.

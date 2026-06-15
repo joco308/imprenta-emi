@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import {
   Copy,
   LogOut,
@@ -27,6 +28,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 interface Order {
   id: string;
+  id_num: number;
   studentName: string;
   email: string;
   service: string;
@@ -39,128 +41,93 @@ interface Order {
   userType: 'teacher' | 'student';
 }
 
+const STATUS_IDS: Record<string, number> = {
+  pending: 28,
+  processing: 29,
+  ready: 30,
+  delivered: 30,
+  cancelled: 31,
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
+  const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<'orders' | 'stats'>('orders');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [statsData, setStatsData] = useState({
+    servicesChart: [] as { name: string; value: number }[],
+    dailyOrders: [] as { day: string; orders: number }[],
+    peakHours: [] as { hour: string; count: number }[],
+  });
+  const [topUsers, setTopUsers] = useState<{ name: string; orders: number; total: number }[]>([]);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pending: 0,
+    processing: 0,
+    ready: 0,
+    delivered: 0,
+    cancelled: 0,
+    totalRevenue: 0,
+    priorityOrders: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 'ORD-2024-001',
-      studentName: 'María García',
-      email: 'maria.garcia@universidad.edu',
-      service: 'Impresión + Anillado',
-      pages: 50,
-      status: 'processing',
-      priority: true,
-      total: 4.50,
-      deliveryTime: '2024-05-18 14:00',
-      submittedAt: '2024-05-18 10:30',
-      userType: 'teacher'
-    },
-    {
-      id: 'ORD-2024-002',
-      studentName: 'Juan Pérez',
-      email: 'juan.perez@universidad.edu',
-      service: 'Fotocopias B/N',
-      pages: 100,
-      status: 'pending',
-      priority: false,
-      total: 5.00,
-      deliveryTime: '2024-05-18 16:00',
-      submittedAt: '2024-05-18 11:00',
-      userType: 'student'
-    },
-    {
-      id: 'ORD-2024-003',
-      studentName: 'Dr. Carlos Rodríguez',
-      email: 'carlos.rodriguez@universidad.edu',
-      service: 'Empastado',
-      pages: 200,
-      status: 'pending',
-      priority: true,
-      total: 15.00,
-      deliveryTime: '2024-05-18 15:00',
-      submittedAt: '2024-05-18 11:15',
-      userType: 'teacher'
-    },
-    {
-      id: 'ORD-2024-004',
-      studentName: 'Ana Martínez',
-      email: 'ana.martinez@universidad.edu',
-      service: 'Impresión Color + CD',
-      pages: 30,
-      status: 'ready',
-      priority: false,
-      total: 8.00,
-      deliveryTime: '2024-05-18 13:00',
-      submittedAt: '2024-05-18 09:00',
-      userType: 'student'
-    },
-    {
-      id: 'ORD-2024-005',
-      studentName: 'Luis Fernández',
-      email: 'luis.fernandez@universidad.edu',
-      service: 'Fotocopias + Anillado',
-      pages: 75,
-      status: 'delivered',
-      priority: false,
-      total: 5.50,
-      deliveryTime: '2024-05-17 16:00',
-      submittedAt: '2024-05-17 14:00',
-      userType: 'student'
-    }
-  ]);
-
-  const statsData = {
-    servicesChart: [
-      { name: 'Fotocopias', value: 450 },
-      { name: 'Impresiones', value: 380 },
-      { name: 'Empastados', value: 120 },
-      { name: 'Anillados', value: 200 },
-      { name: 'CD/DVD', value: 80 }
-    ],
-    dailyOrders: [
-      { day: 'Lun', orders: 45 },
-      { day: 'Mar', orders: 52 },
-      { day: 'Mié', orders: 48 },
-      { day: 'Jue', orders: 61 },
-      { day: 'Vie', orders: 70 },
-      { day: 'Sáb', orders: 35 }
-    ],
-    peakHours: [
-      { hour: '8-10', count: 15 },
-      { hour: '10-12', count: 32 },
-      { hour: '12-14', count: 45 },
-      { hour: '14-16', count: 38 },
-      { hour: '16-18', count: 28 },
-      { hour: '18-20', count: 12 }
-    ]
-  };
+  useEffect(() => {
+    fetch('/api/admin/dashboard')
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          setError(data.error)
+          return
+        }
+        setOrders(data.orders)
+        setStats(data.stats)
+        setStatsData(data.statsData)
+        setTopUsers(data.topUsers)
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
 
   const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
 
   const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    toast.success('Sesión cerrada');
-    router.push('/');
+    signOut({ callbackUrl: '/' })
   };
 
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    setOrders(orders.map(order =>
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    const order = orders.find(o => o.id === orderId)
+    if (!order) return
 
-    const statusMessages = {
-      processing: 'Pedido marcado como en proceso',
-      ready: 'Pedido listo para recoger',
-      delivered: 'Pedido marcado como entregado',
-      cancelled: 'Pedido cancelado'
-    };
+    const statusId = STATUS_IDS[newStatus]
+    if (!statusId) return
 
-    toast.success(statusMessages[newStatus] || 'Estado actualizado');
+    try {
+      const res = await fetch(`/api/ordenes/${order.id_num}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_estado: statusId }),
+      })
+      if (!res.ok) throw new Error('Error al actualizar')
+
+      setOrders(orders.map(o =>
+        o.id === orderId ? { ...o, status: newStatus } : o
+      ));
+
+      const statusMessages: Record<string, string> = {
+        processing: 'Pedido marcado como en proceso',
+        ready: 'Pedido listo para recoger',
+        delivered: 'Pedido marcado como entregado',
+        cancelled: 'Pedido cancelado'
+      };
+
+      toast.success(statusMessages[newStatus] || 'Estado actualizado');
+    } catch {
+      toast.error('Error al actualizar el estado')
+    }
   };
 
   const getStatusBadge = (status: Order['status']) => {
@@ -201,14 +168,33 @@ export default function AdminDashboard() {
     });
   };
 
-  const stats = {
-    totalOrders: orders.length,
-    pending: orders.filter(o => o.status === 'pending').length,
-    processing: orders.filter(o => o.status === 'processing').length,
-    ready: orders.filter(o => o.status === 'ready').length,
-    priorityOrders: orders.filter(o => o.priority).length,
-    totalRevenue: orders.reduce((sum, o) => sum + o.total, 0)
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="size-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Cargando panel...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="size-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <AlertCircle className="size-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Error al cargar datos</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
+            Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -243,8 +229,8 @@ export default function AdminDashboard() {
 
               <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-semibold text-gray-900">Administrador</p>
-                  <p className="text-gray-500 text-xs">admin@copycampus.edu</p>
+                  <p className="font-semibold text-gray-900">{session?.user?.name ?? 'Admin'}</p>
+                  <p className="text-gray-500 text-xs">{session?.user?.email}</p>
                 </div>
               </div>
 
@@ -586,12 +572,9 @@ export default function AdminDashboard() {
                 Usuarios Frecuentes
               </h3>
               <div className="space-y-4">
-                {[
-                  { name: 'María García', orders: 25, total: 125.50 },
-                  { name: 'Dr. Carlos Rodríguez', orders: 18, total: 245.00 },
-                  { name: 'Juan Pérez', orders: 15, total: 78.00 },
-                  { name: 'Ana Martínez', orders: 12, total: 95.50 }
-                ].map((user, index) => (
+                {topUsers.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No hay usuarios con pedidos registrados</p>
+                ) : topUsers.map((user, index) => (
                   <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-4">
                       <div className="bg-purple-600 text-white size-10 rounded-full flex items-center justify-center font-bold">

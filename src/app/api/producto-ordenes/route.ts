@@ -1,0 +1,28 @@
+import { ProductoOrdenesRepository } from '@/lib/repositories/producto_ordenes.repository'
+import { getServerClient, ok, created, badRequest, serverError } from '@/lib/api-helpers'
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const ordenId = searchParams.get('orden')
+    const productoId = searchParams.get('producto')
+    const db = await getServerClient()
+    const repo = new ProductoOrdenesRepository(db)
+    let data
+    if (ordenId) data = await repo.findByOrden(Number(ordenId))
+    else if (productoId) data = await repo.findByProducto(Number(productoId))
+    else data = await repo.findAll()
+    return ok(data)
+  } catch (e) { return serverError(e) }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
+    if (!body.id_orden || !body.id_producto) return badRequest('Los campos id_orden e id_producto son requeridos')
+    const db = await getServerClient()
+    const repo = new ProductoOrdenesRepository(db)
+    const created = await repo.create(body)
+    return created(created)
+  } catch (e) { return serverError(e) }
+}
