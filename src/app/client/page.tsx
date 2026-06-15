@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react'
 import {
   Copy,
@@ -22,14 +21,12 @@ import {
   Hash,
   Layers,
   Star,
-  BookOpen,
   Disc,
   Home
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ClientDashboard() {
-  const router = useRouter();
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<'new-order' | 'my-orders' | 'queue'>('new-order');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -390,8 +387,8 @@ export default function ClientDashboard() {
                       onChange={(e) => setPrintConfig({ ...printConfig, size: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                     >
-                      <option value="carta">Carta (8.5" x 11")</option>
-                      <option value="oficio">Oficio (8.5" x 14")</option>
+                      <option value="carta">Carta (8.5″ x 11″)</option>
+                      <option value="oficio">Oficio (8.5″ x 14″)</option>
                       <option value="a4">A4 (210mm x 297mm)</option>
                     </select>
                   </div>

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { UsuariosRepository } from '@/lib/repositories/usuarios.repository'

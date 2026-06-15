@@ -1,4 +1,5 @@
-import NextAuth from 'next-auth'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
 import { createClient } from '@supabase/supabase-js'
 import { UsuariosRepository } from '@/lib/repositories/usuarios.repository'
@@ -93,7 +94,7 @@ export async function sessionCallback({ session, token }: any) {
   }
 }
 
-export async function signInCallback({ user, account, profile }: any) {
+export async function signInCallback({ user, account: _account, profile }: any) {
   try {
     if (!user.email) {
       console.error('[auth] signIn: email vacío', { user })

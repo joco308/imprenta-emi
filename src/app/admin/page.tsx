@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   Copy,
@@ -50,7 +49,6 @@ const STATUS_IDS: Record<string, number> = {
 }
 
 export default function AdminDashboard() {
-  const router = useRouter();
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<'orders' | 'stats'>('orders');
   const [filterStatus, setFilterStatus] = useState<string>('all');

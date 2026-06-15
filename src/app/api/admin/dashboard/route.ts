@@ -1,4 +1,5 @@
-import { NextRequest } from 'next/server'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { createClient } from '@/lib/server'
 import { ok, serverError } from '@/lib/api-helpers'
 
@@ -31,19 +32,15 @@ export async function GET() {
   try {
     const db = await createClient()
 
-    const [ordenResult, usuariosResult, subdominioResult, impresionesResult, productosResult] = await Promise.all([
+    const [ordenResult, usuariosResult, subdominioResult] = await Promise.all([
       db.from('Orden').select('*'),
       db.from('Usuarios').select('*'),
       db.from('Sub_dominio').select('*'),
-      db.from('Impresion').select('*'),
-      db.from('Productos').select('*'),
     ])
 
     const orders = ordenResult.data ?? []
     const users = usuariosResult.data ?? []
     const subdominios = subdominioResult.data ?? []
-    const impresiones = impresionesResult.data ?? []
-    const productos = productosResult.data ?? []
 
     const enrichedOrders: EnrichedOrder[] = orders.map((order: any) => {
       const user = users.find((u: any) => u.id === order.id_usuario)
@@ -110,19 +107,18 @@ export async function GET() {
       { hour: '18-20', count: 12 },
     ]
 
-    const userOrderCounts: Record<number, { name: string; orders: number; total: number }> = {}
+    const userOrderCounts: Record<string, { name: string; orders: number; total: number }> = {}
     enrichedOrders.forEach(o => {
-      const idNum = o.id_num
-      if (!userOrderCounts[idNum]) {
-        const user = users.find((u: any) => u.id === idNum)
-        userOrderCounts[idNum] = {
+      const key = o.email
+      if (!userOrderCounts[key]) {
+        userOrderCounts[key] = {
           name: o.studentName,
           orders: 0,
           total: 0,
         }
       }
-      userOrderCounts[idNum].orders++
-      userOrderCounts[idNum].total += o.total
+      userOrderCounts[key].orders++
+      userOrderCounts[key].total += o.total
     })
 
     const topUsers = Object.values(userOrderCounts)
