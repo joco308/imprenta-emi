@@ -5,27 +5,6 @@ import { createClient } from '@supabase/supabase-js'
 import { UsuariosRepository } from '@/lib/repositories/usuarios.repository'
 import { SubDominioRepository } from '@/lib/repositories/sub_dominio.repository'
 
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string
-      needsPassword: boolean
-      email: string
-      name: string
-      roleId: number
-      role: string
-    }
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    userId: string
-    needsPassword: boolean
-    roleId: number
-  }
-}
-
 export function getDb() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
