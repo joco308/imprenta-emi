@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     if (!body.subdominio || !body.id_dominio) return badRequest('Los campos subdominio e id_dominio son requeridos')
     const db = await getServerClient()
     const repo = new SubDominioRepository(db)
-    const created = await repo.create(body)
-    return created(created)
+    const record = await repo.create(body)
+    return created(record)
   } catch (e) { return serverError(e) }
 }

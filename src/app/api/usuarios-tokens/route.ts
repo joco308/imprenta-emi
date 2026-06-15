@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (!body.token || !body.id_usuario) return badRequest('Los campos token e id_usuario son requeridos')
     const db = await getServerClient()
     const repo = new UsuariosTokensRepository(db)
-    const created = await repo.create(body)
-    return created(created)
+    const record = await repo.create(body)
+    return created(record)
   } catch (e) { return serverError(e) }
 }

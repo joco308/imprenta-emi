@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     if (!body.opcion_nombre) return badRequest('El campo opcion_nombre es requerido')
     const db = await getServerClient()
     const repo = new TrabajosImpresionExtrasRepository(db)
-    const created = await repo.create(body)
-    return created(created)
+    const record = await repo.create(body)
+    return created(record)
   } catch (e) { return serverError(e) }
 }

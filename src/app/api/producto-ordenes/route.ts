@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (!body.id_orden || !body.id_producto) return badRequest('Los campos id_orden e id_producto son requeridos')
     const db = await getServerClient()
     const repo = new ProductoOrdenesRepository(db)
-    const created = await repo.create(body)
-    return created(created)
+    const record = await repo.create(body)
+    return created(record)
   } catch (e) { return serverError(e) }
 }

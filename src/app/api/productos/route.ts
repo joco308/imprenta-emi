@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (!body.nombre || body.precio === undefined) return badRequest('Los campos nombre y precio son requeridos')
     const db = await getServerClient()
     const repo = new ProductosRepository(db)
-    const created = await repo.create(body)
-    return created(created)
+    const record = await repo.create(body)
+    return created(record)
   } catch (e) { return serverError(e) }
 }

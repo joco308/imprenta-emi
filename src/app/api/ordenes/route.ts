@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (!body.id_usuario) return badRequest('El campo id_usuario es requerido')
     const db = await getServerClient()
     const repo = new OrdenRepository(db)
-    const created = await repo.create(body)
-    return created(created)
+    const record = await repo.create(body)
+    return created(record)
   } catch (e) { return serverError(e) }
 }

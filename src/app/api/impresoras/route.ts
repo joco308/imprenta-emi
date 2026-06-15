@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     if (!body.nombre) return badRequest('El campo nombre es requerido')
     const db = await getServerClient()
     const repo = new ImpresorasRepository(db)
-    const created = await repo.create(body)
-    return created(created)
+    const record = await repo.create(body)
+    return created(record)
   } catch (e) { return serverError(e) }
 }

@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     if (!body.id_usuario || !body.total_paginas) return badRequest('Los campos id_usuario y total_paginas son requeridos')
     const db = await getServerClient()
     const repo = new ImpresionRepository(db)
-    const created = await repo.create(body)
-    return created(created)
+    const record = await repo.create(body)
+    return created(record)
   } catch (e) { return serverError(e) }
 }
