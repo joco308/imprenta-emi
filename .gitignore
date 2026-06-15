@@ -1,43 +1,25 @@
-# dependencies
+# Dependencias (Nunca se suben, pesan demasiado)
 node_modules/
-.pnp
-.pnp.js
 
-# next.js
-.next/
-out/
-build/
-dist/
+# Caché y compilación de Next.js
+/.next/
+/out/
+/build/
 
-# next.js / turbopack / swc caches
-.turbo/
-.swc/
-
-# production
-*.tsbuildinfo
-
-# env files (keep .env.example, ignore real ones)
+# Archivos SECRETOS de configuración (¡Aquí se cuidan tus contraseñas y .env!)
 .env
-.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# logs
+# Archivos de depuración y logs de errores
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-*.log
+.pnpm-debug.log*
 
-# editor / OS
+# Archivos del sistema operativo (Basura visual)
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# misc
-coverage/
-.cache/
-.parcel-cache/
+*.pem
