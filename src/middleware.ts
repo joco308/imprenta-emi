@@ -1,4 +1,4 @@
-import { auth } from '@/lib/middleware-auth'
+import { auth } from '@/auth'
 
 export default auth((req) => {
   const { pathname } = req.nextUrl

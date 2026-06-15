@@ -24,9 +24,7 @@ const tenantId = process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID!
 export const microsoftProvider = MicrosoftEntraID({
   clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID!,
   clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET!,
-  issuer: `https://login.microsoftonline.com/${tenantId}/v2.0/`,
-  authorization: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`,
-  token: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+  issuer: `https://login.microsoftonline.com/${tenantId}/v2.0`,
 })
 
 export async function jwtCallback({ token, account, profile }: any) {

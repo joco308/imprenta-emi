@@ -12,6 +12,7 @@ import {
 } from '@/lib/auth-shared'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  secret: process.env.AUTH_SECRET,
   providers: [
     microsoftProvider,
     Credentials({
